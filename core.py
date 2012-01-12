@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from message import Message
+import user
 import plugin
 
 class Core(plugin.Plugin):
@@ -7,6 +8,7 @@ class Core(plugin.Plugin):
         plugin.Plugin.__init__(self, connection)
         self.startdate = datetime.now()
         self.pluginname = ''
+        user.setup_db()
     
     def uptime(self, replyto, details):
         td = datetime.now() - self.startdate
@@ -37,4 +39,44 @@ class Core(plugin.Plugin):
         m = Message()
         m.command = 'QUIT'
         m.params = ['We out']
+        self.connection.send(m)
+        
+    def adduser(self, replyto, details):
+        if replyto.startswith('#'):
+            self.__mock(replyto)
+            return
+        
+        m = Message()
+        m.command = 'PRIVMSG'
+        u = user.User(details[0])
+        if u.new:
+            u.username = details[0]
+            u.setpassword(details[1])
+            u.save()
+            m.params = [replyto, 'Done']
+        else:
+            m.params = [replyto, 'User already exists']
+        self.connection.send(m)
+        
+    def login(self, replyto, details):
+        if replyto.startswith('#'):
+            self.__mock(replyto)
+            return
+
+        m = Message()
+        m.command = 'PRIVMSG'
+        u = user.login(details[0], details[1])
+        if u == None:
+            m.params = [replyto, 'Login failed']
+        else:
+            u.nick = replyto
+            u.last_login = datetime.now()
+            u.save()
+            m.params = [replyto, 'Login succeeded']
+        self.connection.send(m)
+        
+    def __mock(self, replyto):
+        m = Message()
+        m.command = 'PRIVMSG'
+        m.params = [replyto, 'You are an idiot']
         self.connection.send(m)
