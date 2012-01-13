@@ -64,7 +64,7 @@ class User:
         return self.__password == hash(password)
         
     def setpassword(self, newpassword):
-        self.__password = hash(password)
+        self.__password = hash(newpassword)
         
 def hash(password):
     return password
@@ -75,6 +75,14 @@ def login(username, password):
         return u
     else:
         return None
+        
+def finduser(username):
+    conn = sqlite3.connect('beastbot.db')
+    c = conn.cursor()
+    c.execute("select * from user where username like ?", ('%' + username + '%',))
+    data = c.fetchall()
+    conn.close()
+    return data
     
 def setup_db():
     if os.path.exists('beastbot.db') and os.path.isfile('beastbot.db'):

@@ -75,6 +75,15 @@ class Core(plugin.Plugin):
             m.params = [replyto, 'Login succeeded']
         self.connection.send(m)
         
+    def finduser(self, replyto, details):
+        users = user.finduser(details[0])
+        m = Message()
+        m.command = 'PRIVMSG'
+        m.params = [replyto, '']
+        for row in users:
+            m.params[1] = row[0] + ' ' + row[1]
+            self.connection.send(m)
+        
     def __mock(self, replyto):
         m = Message()
         m.command = 'PRIVMSG'
