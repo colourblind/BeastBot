@@ -1,9 +1,11 @@
 import sqlite3
 import os
 
+logged_in_users = []
+
 class User:
-    def __init__(self, username=None):
-        if username == None:
+    def __init__(self, username=None, data=None):
+        if username == None and data == None:
             self.new = True
             self.username = ''
             self.nick = ''
@@ -11,11 +13,13 @@ class User:
             self.last_login = None
             self.__password = ''
         else:
-            conn = sqlite3.connect('beastbot.db')
-            c = conn.cursor()
-            c.execute('select username, password, nick, admin, last_login from user where username = ?', (username,))
-            data = c.fetchone()
-            conn.close()
+            if not username == None:
+                print(username)
+                conn = sqlite3.connect('beastbot.db')
+                c = conn.cursor()
+                c.execute('select username, password, nick, admin, last_login from user where username = ?', (username,))
+                data = c.fetchone()
+                conn.close()
                         
             if data == None:
                 self.new = True
@@ -35,11 +39,12 @@ class User:
     def save(self):
         conn = sqlite3.connect('beastbot.db')
         c = conn.cursor()
-        data = (self.username, self.__password, self.nick, self.admin, self.last_login)
         if self.new:
+            data = (self.username, self.__password, self.nick, self.admin, self.last_login)
             c.execute('insert into user (username, password, nick, admin, last_login) values (?, ?, ?, ?, ?)', data)
             self.new = False
         else:
+            data = (self.__password, self.nick, self.admin, self.last_login, self.username)
             c.execute('update user set password = ?, nick = ?, admin = ?, last_login = ? where username = ?', data)
         conn.commit()
         conn.close()
@@ -79,10 +84,19 @@ def login(username, password):
 def finduser(username):
     conn = sqlite3.connect('beastbot.db')
     c = conn.cursor()
-    c.execute("select * from user where username like ?", ('%' + username + '%',))
+    c.execute("select username, password, nick, admin, last_login from user where username like ?", ('%' + username + '%',))
     data = c.fetchall()
     conn.close()
-    return data
+    return map(lambda x: User(data=x), data)
+    
+def getuserbynick(nick):
+    print(nick)
+    conn = sqlite3.connect('beastbot.db')
+    c = conn.cursor()
+    c.execute("select username, password, nick, admin, last_login from user where nick = ?", (nick,))
+    data = c.fetchone()
+    conn.close()
+    return User(data=data)
     
 def setup_db():
     if os.path.exists('beastbot.db') and os.path.isfile('beastbot.db'):

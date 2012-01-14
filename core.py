@@ -41,7 +41,7 @@ class Core(plugin.Plugin):
         m.params = ['We out']
         self.connection.send(m)
         
-    def adduser(self, replyto, details):
+    def register(self, replyto, details):
         if replyto.startswith('#'):
             self.__mock(replyto)
             return
@@ -69,10 +69,28 @@ class Core(plugin.Plugin):
         if u == None:
             m.params = [replyto, 'Login failed']
         else:
-            u.nick = replyto
-            u.last_login = datetime.now()
-            u.save()
-            m.params = [replyto, 'Login succeeded']
+            if u.username in user.logged_in_users:
+                m.params = [replyto, 'Already logged in']
+            else:
+                u.nick = replyto
+                u.last_login = datetime.now()
+                u.save()
+                user.logged_in_users.append(u.username)
+                m.params = [replyto, 'Login succeeded']
+        self.connection.send(m)
+        
+    def logout(self, replyto, details):
+        m = Message()
+        m.command = 'PRIVMSG'
+        u = user.getuserbynick(replyto)
+        if u == None:
+            m.params = [replyto, 'Unable to match nick to user']
+        else:
+            if u.username in user.logged_in_users:
+                user.logged_in_users.remove(u.username)
+                m.params = [replyto, 'Done']
+            else:
+                m.params = [replyto, 'You are not logged in']
         self.connection.send(m)
         
     def finduser(self, replyto, details):
@@ -81,7 +99,7 @@ class Core(plugin.Plugin):
         m.command = 'PRIVMSG'
         m.params = [replyto, '']
         for row in users:
-            m.params[1] = row[0] + ' ' + row[1]
+            m.params[1] = str(row)
             self.connection.send(m)
         
     def __mock(self, replyto):
