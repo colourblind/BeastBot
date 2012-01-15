@@ -9,6 +9,7 @@ class Core(plugin.Plugin):
         self.startdate = datetime.now()
         self.pluginname = ''
         user.setup_db()
+        user.reset_all_logins()
     
     def uptime(self, replyto, details):
         td = datetime.now() - self.startdate
@@ -37,6 +38,9 @@ class Core(plugin.Plugin):
         
     def die(self, replyto, details):
         m = Message()
+        m.command = 'PRIVMSG'
+        m.params = [replyto, 'Aaaieeee!']
+        self.connection.send(m)
         m.command = 'QUIT'
         m.params = ['We out']
         self.connection.send(m)
@@ -65,32 +69,31 @@ class Core(plugin.Plugin):
 
         m = Message()
         m.command = 'PRIVMSG'
-        u = user.login(details[0], details[1])
+        u = user.authenticate(details[0], details[1])
         if u == None:
             m.params = [replyto, 'Login failed']
         else:
-            if u.username in user.logged_in_users:
+            if len(u.nick) > 0:
                 m.params = [replyto, 'Already logged in']
             else:
                 u.nick = replyto
                 u.last_login = datetime.now()
                 u.save()
-                user.logged_in_users.append(u.username)
                 m.params = [replyto, 'Login succeeded']
         self.connection.send(m)
         
     def logout(self, replyto, details):
+        if replyto.startswith('#'):
+            return
+        u = user.User(nick=replyto)
         m = Message()
         m.command = 'PRIVMSG'
-        u = user.getuserbynick(replyto)
-        if u == None:
+        if u.new:
             m.params = [replyto, 'Unable to match nick to user']
         else:
-            if u.username in user.logged_in_users:
-                user.logged_in_users.remove(u.username)
-                m.params = [replyto, 'Done']
-            else:
-                m.params = [replyto, 'You are not logged in']
+            u.nick = ''
+            u.save()
+            m.params = [replyto, 'Done']
         self.connection.send(m)
         
     def finduser(self, replyto, details):
@@ -101,7 +104,7 @@ class Core(plugin.Plugin):
         for row in users:
             m.params[1] = str(row)
             self.connection.send(m)
-        
+            
     def __mock(self, replyto):
         m = Message()
         m.command = 'PRIVMSG'

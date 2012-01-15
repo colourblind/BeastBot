@@ -1,11 +1,9 @@
 import sqlite3
 import os
 
-logged_in_users = []
-
 class User:
-    def __init__(self, username=None, data=None):
-        if username == None and data == None:
+    def __init__(self, username=None, nick=None, data=None):
+        if username == None and nick == None and data == None:
             self.new = True
             self.username = ''
             self.nick = ''
@@ -14,13 +12,18 @@ class User:
             self.__password = ''
         else:
             if not username == None:
-                print(username)
                 conn = sqlite3.connect('beastbot.db')
                 c = conn.cursor()
                 c.execute('select username, password, nick, admin, last_login from user where username = ?', (username,))
                 data = c.fetchone()
                 conn.close()
-                        
+            elif not nick == None:
+                conn = sqlite3.connect('beastbot.db')
+                c = conn.cursor()
+                c.execute('select username, password, nick, admin, last_login from user where nick = ?', (nick,))
+                data = c.fetchone()
+                conn.close()
+                
             if data == None:
                 self.new = True
                 self.username = username
@@ -31,10 +34,14 @@ class User:
             else:
                 self.new = False
                 self.username = data[0]
+                self.__password = data[1]
                 self.nick = data[2]
                 self.admin = data[3]
                 self.last_login = data[4]
-                self.__password = data[1]
+                
+    def __str__(self):
+        s = '{0} {1}'.format(self.username, self.nick)
+        return s
        
     def save(self):
         conn = sqlite3.connect('beastbot.db')
@@ -71,15 +78,15 @@ class User:
     def setpassword(self, newpassword):
         self.__password = hash(newpassword)
         
+def authenticate(username, password):
+    u = User(username)
+    if not u == None:
+        if not u.checkpassword(password):
+            u = None
+    return u
+    
 def hash(password):
     return password
-        
-def login(username, password):
-    u = User(username)
-    if u.checkpassword(password):
-        return u
-    else:
-        return None
         
 def finduser(username):
     conn = sqlite3.connect('beastbot.db')
@@ -88,15 +95,13 @@ def finduser(username):
     data = c.fetchall()
     conn.close()
     return map(lambda x: User(data=x), data)
-    
-def getuserbynick(nick):
-    print(nick)
+
+def reset_all_logins():
     conn = sqlite3.connect('beastbot.db')
     c = conn.cursor()
-    c.execute("select username, password, nick, admin, last_login from user where nick = ?", (nick,))
-    data = c.fetchone()
+    c.execute("update user set nick = ''")
+    conn.commit()
     conn.close()
-    return User(data=data)
     
 def setup_db():
     if os.path.exists('beastbot.db') and os.path.isfile('beastbot.db'):
