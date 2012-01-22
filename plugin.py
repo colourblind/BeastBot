@@ -11,5 +11,5 @@ class Plugin:
         if message.params[0].startswith('#'):
             replyto = message.params[0]
         else:
-            replyto = message.prefix[message.prefix.index(':') + 1:message.prefix.index('!')]
+            replyto = message.sender
         method(replyto, p[1:])

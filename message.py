@@ -4,6 +4,7 @@ class Message:
         self.prefix = ''
         self.command = ''
         self.params = []
+        self.sender = ''
         
     def parse(self):
         tokens = self.raw.split(' ')
@@ -17,7 +18,15 @@ class Message:
                 break
             else:
                 self.params.append(tokens.pop(0))
+                
+        if len(self.prefix):
+            endIndex = self.prefix.find('!')
+            if endIndex == -1:
+                endIndex = len(self.prefix)
+            self.sender = self.prefix[self.prefix.index(':') + 1:endIndex]
+                
         print('prefix-' + self.prefix)
+        print('sender-' + self.sender);
         print('comman-' + self.command)
         print('params-' + str(self.params))
         

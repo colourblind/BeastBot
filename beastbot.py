@@ -2,6 +2,7 @@ import sys
 import connection
 from message import Message
 import core
+import user
 
 class BeastBot:
     def __init__(self, server, port=6667, nick='BeastBot', username=None, password=None):
@@ -21,9 +22,14 @@ class BeastBot:
             m.command = 'PONG'
             m.params = message.params
             self.connection.send(m)
-        elif message.command == 'LEAVE':
+        elif message.command == 'QUIT':
             # user left. Log them out if need be
-            pass
+            u = user.User(nick=message.sender)
+            u.logout()
+        elif message.command == 'NICK':
+            # nick updated. Chase them!
+            u = user.User(nick=message.sender)
+            u.change_nick(message.params[0])
         elif message.command == 'PRIVMSG' and message.params[1].startswith('!'):
             # palm it off to the plugins
             self.plugins[0].handle(message)

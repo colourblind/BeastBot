@@ -78,6 +78,14 @@ class User:
     def setpassword(self, newpassword):
         self.__password = hash(newpassword)
         
+    def change_nick(self, newnick):
+        self.nick = newnick
+        self.save()
+        
+    def logout(self):
+        self.nick = ''
+        self.save()
+        
 def authenticate(username, password):
     u = User(username)
     if not u == None:

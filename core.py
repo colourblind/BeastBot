@@ -91,8 +91,7 @@ class Core(plugin.Plugin):
         if u.new:
             m.params = [replyto, 'Unable to match nick to user']
         else:
-            u.nick = ''
-            u.save()
+            u.logout()
             m.params = [replyto, 'Done']
         self.connection.send(m)
         
