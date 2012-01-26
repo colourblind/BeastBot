@@ -2,6 +2,7 @@ import sys
 import connection
 from message import Message
 import core
+import plugin
 import user
 
 class BeastBot:
@@ -9,6 +10,7 @@ class BeastBot:
         self.connection = connection.Connection(server, port)
         self.connection.handshake(nick)
         self.plugins = [core.Core(self.connection)]
+        self.plugins.extend(plugin.load_plugins(self.connection))
         
     def run(self):
         while True:
@@ -32,7 +34,9 @@ class BeastBot:
             u.change_nick(message.params[0])
         elif message.command == 'PRIVMSG' and message.params[1].startswith('!'):
             # palm it off to the plugins
-            self.plugins[0].handle(message)
+            for plugin in self.plugins:
+                if plugin.handle(message):
+                    break
             
 
 if __name__ == '__main__':
