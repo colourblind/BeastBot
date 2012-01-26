@@ -1,0 +1,1 @@
+A pluggable IRC bot, written in Python.
