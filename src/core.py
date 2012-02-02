@@ -30,6 +30,8 @@ class Core(plugin.Plugin):
         self.connection.send(m)
         
     def join(self, nick, channel, details):
+        if len(details) < 1:
+            return;
         m = Message()
         m.command = 'JOIN'
         if details[0].startswith('#'):
@@ -50,6 +52,8 @@ class Core(plugin.Plugin):
         self.connection.send(m)
         
     def register(self, nick, channel, details):
+        if len(details) < 2:
+            return;
         if channel != None:
             self.__mock(channel)
             return
@@ -67,6 +71,8 @@ class Core(plugin.Plugin):
         self.connection.send(m)
         
     def login(self, nick, channel, details):
+        if len(details) < 2:
+            return;
         if channel != None:
             self.__mock(channel)
             return
@@ -98,6 +104,8 @@ class Core(plugin.Plugin):
         self.connection.send(m)
         
     def finduser(self, nick, channel, details):
+        if len(details) < 1:
+            return;
         users = user.finduser(details[0])
         m = Message()
         m.command = 'PRIVMSG'

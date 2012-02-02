@@ -10,6 +10,9 @@ class Lookup(plugin.Plugin):
 
     # http://blog.programmableweb.com/2010/02/08/googles-secret-weather-api/
     def weather(self, nick, channel, params):
+        if len(params) < 1:
+            return;
+
         replyto = nick if channel == None else channel
         location = ' '.join(params)
         url = 'http://www.google.com/ig/api?' + urllib.urlencode({'weather' : location})
@@ -29,6 +32,9 @@ class Lookup(plugin.Plugin):
     # http://services.aonaware.com/DictService/DictService.asmx/DefineInDict
     # dictId=wn&word=XXXXX
     def define(self, nick, channel, params):
+        if len(params) < 1:
+            return;
+            
         replyto = nick if channel == None else channel
         url = 'http://services.aonaware.com/DictService/DictService.asmx/DefineInDict'
         body = urllib.urlencode({'dictId' : 'wn', 'word' : params[0]}) 
@@ -47,6 +53,9 @@ class Lookup(plugin.Plugin):
 
     # http://en.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&format=xml&titles=Toast        
     def wiki(self, nick, channel, params):
+        if len(params) < 1:
+            return;
+
         replyto = nick if channel == None else channel
         url = 'http://en.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&format=xml&titles=' + urllib.encode(params[0])
         xml = ElementTree(file=urllib.open(url))
