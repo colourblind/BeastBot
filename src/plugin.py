@@ -27,11 +27,10 @@ class Plugin:
         except (AttributeError):
             return False
 
+        channel = None
         if message.params[0].startswith('#'):
-            replyto = message.params[0]
-        else:
-            replyto = message.sender
-        method(replyto, p[1:])
+            channel = message.params[0]
+        method(message.sender, channel, p[1:])
             
         return True
 

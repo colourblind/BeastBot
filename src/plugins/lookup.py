@@ -9,7 +9,8 @@ class Lookup(plugin.Plugin):
         self.pluginname = 'lookup'
 
     # http://blog.programmableweb.com/2010/02/08/googles-secret-weather-api/
-    def weather(self, replyto, params):
+    def weather(self, nick, channel, params):
+        replyto = nick if channel == None else channel
         location = ' '.join(params)
         url = 'http://www.google.com/ig/api?' + urllib.urlencode({'weather' : location})
         xml = ElementTree(file=urllib.urlopen(url))
@@ -27,7 +28,8 @@ class Lookup(plugin.Plugin):
     # Many thanks to Adrian O'Neill for his dictionary web service
     # http://services.aonaware.com/DictService/DictService.asmx/DefineInDict
     # dictId=wn&word=XXXXX
-    def define(self, replyto, params):
+    def define(self, nick, channel, params):
+        replyto = nick if channel == None else channel
         url = 'http://services.aonaware.com/DictService/DictService.asmx/DefineInDict'
         body = urllib.urlencode({'dictId' : 'wn', 'word' : params[0]}) 
         xml = ElementTree(file=urllib.urlopen(url, body))
@@ -44,7 +46,8 @@ class Lookup(plugin.Plugin):
             self.connection.send(m)
 
     # http://en.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&format=xml&titles=Toast        
-    def wiki(self, replyto, params):
+    def wiki(self, nick, channel, params):
+        replyto = nick if channel == None else channel
         url = 'http://en.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&format=xml&titles=' + urllib.encode(params[0])
         xml = ElementTree(file=urllib.open(url))
     
