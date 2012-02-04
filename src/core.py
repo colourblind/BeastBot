@@ -103,6 +103,28 @@ class Core(plugin.Plugin):
             m.params = [nick, 'Done']
         self.connection.send(m)
         
+    def promote(self, nick, channel, details):
+        u = user.User(nick=nick)
+        m = Message()
+        if u.new:
+            m.command = 'PRIVMSG'
+            m.params = [nick, 'Please log in']
+            self.connection.send(m)
+        else:
+            if channel == None:
+                channel = details[0] if details[0].startswith('#') else '#' + details[0]
+            print(u.username + ' ' + u.nick)
+            perms = u.getpermissions(channel)
+            print(perms)
+            if perms != None:
+                m.command = 'MODE'
+                m.params = [channel, '+' + perms, nick]
+                self.connection.send(m)
+            else:
+                m.command = 'PRIVMSG'
+                m.params = [nick, 'You have no rights for this channel']
+                self.connection.send(m)
+        
     def finduser(self, nick, channel, details):
         if len(details) < 1:
             return;

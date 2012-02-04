@@ -56,19 +56,32 @@ class User:
         conn.commit()
         conn.close()
 
+    def getallpermissions(self):
+        conn = sqlite3.connect('beastbot.db')
+        c = conn.cursor()
+        c.execute('select rights, channel from permission where username = ?', (self.username,))
+        data = c.fetchall()
+        conn.close()
+        return data
+        
     def getpermissions(self, channel):
         conn = sqlite3.connect('beastbot.db')
         c = conn.cursor()
-        c.execute('select level from permission where username = ? and channel = ?', (self.username, channel))
-        data = c.fetchone()[0]
-        conn.close()
-        return data
+        c.execute('select rights from permission where username = ? and channel = ?', (self.username, channel))
+        data = c.fetchone()
+        if data == None:
+            return None
+        else:
+            conn.close()
+            return data[0]
         
     def setpermissions(self, channel, rights):
         # TODO: update vs. insert
         conn = sqlite3.connect('beastbot.db')
         c = conn.cursor()
-        c.execute('insert into permission set rights = ? where username = ? and channel = ?', (rights, self.username, channel))
+        c.execute('insert into permission (rights, username, channel) values (?, ?, ?)', (rights, self.username, channel))
+        
+        #  update permission set rights = ? where username = ? and channel = ?
         conn.commit()
         conn.close()
         
