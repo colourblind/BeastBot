@@ -103,6 +103,21 @@ class Core(plugin.Plugin):
             m.params = [nick, 'Done']
         self.connection.send(m)
         
+    def perms(self, nick, channel, details):
+        if len(details) == 0:
+            return
+        u = user.User(details[0])
+        m = Message()
+        m.command = 'PRIVMSG'
+        if len(details) == 1:
+            m.params = [nick, str(u.getallpermissions())]
+        elif len(details) == 2:
+            m.params = [nick, str(u.getpermissions(details[1]))]
+        elif len(details) == 3:
+            u.setpermissions(details[1], details[2])
+            m.params = [nick, 'Done']
+        self.connection.send(m)
+            
     def promote(self, nick, channel, details):
         u = user.User(nick=nick)
         m = Message()
