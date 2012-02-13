@@ -43,6 +43,8 @@ class Core(plugin.Plugin):
         # TODO: setup user as operator if not
         
     def die(self, nick, channel, details):
+        if not self.check_permissions(nick, channel, 'a'):
+            return
         m = Message()
         m.command = 'PRIVMSG'
         m.params = [nick, 'Aaaieeee!']

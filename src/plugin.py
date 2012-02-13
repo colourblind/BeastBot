@@ -1,6 +1,7 @@
 import imp
 import inspect
 import os
+import user
 
 class Plugin:
     def __init__(self, connection):
@@ -34,6 +35,24 @@ class Plugin:
             
         return True
 
+    def check_permissions(self, nick, channel, required):
+        u = user.User(nick=nick)
+        if u == None:
+            return False
+
+        if required == 'a':
+            return u.admin
+
+        perms = u.getpermissions(channel)
+        print('Perms for {0} {1} {2} {3}'.format(nick, channel, perms, required))
+        if perms == None:
+            return False
+        elif required == 'o' and (perms == 'o' or perms == 'v'):
+            return True
+        elif required == 'v' and perms == 'v':
+            return True
+        return False
+        
 def load_plugins(connection):
     modules = load_modules()
     plugins = []
