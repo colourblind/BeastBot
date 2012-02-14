@@ -2,6 +2,7 @@ import imp
 import inspect
 import os
 import user
+from message import Message
 
 class Plugin:
     def __init__(self, connection):
@@ -39,7 +40,8 @@ class Plugin:
         u = user.User(nick=nick)
         if u == None:
             return False
-
+        if u.admin:
+            return True
         if required == 'a':
             return u.admin
 
@@ -52,6 +54,13 @@ class Plugin:
         elif required == 'v' and perms == 'v':
             return True
         return False
+        
+    def error_message(self, nick, channel, message):
+        recipient = channel if channel != None else nick
+        m = Message()
+        m.command = 'PRIVMSG'
+        m.params = [recipient, message]
+        self.connection.send(m)
         
 def load_plugins(connection):
     modules = load_modules()

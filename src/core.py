@@ -31,7 +31,7 @@ class Core(plugin.Plugin):
         
     def join(self, nick, channel, details):
         if len(details) < 1:
-            return;
+            return self.error_message(nick, channel, 'Usage: !join CHANNEL')
         m = Message()
         m.command = 'JOIN'
         if details[0].startswith('#'):
@@ -44,7 +44,7 @@ class Core(plugin.Plugin):
         
     def die(self, nick, channel, details):
         if not self.check_permissions(nick, channel, 'a'):
-            return
+            return self.error_message(nick, channel, 'Admin rights required')
         m = Message()
         m.command = 'PRIVMSG'
         m.params = [nick, 'Aaaieeee!']
@@ -55,10 +55,9 @@ class Core(plugin.Plugin):
         
     def register(self, nick, channel, details):
         if len(details) < 2:
-            return;
+            return self.error_message(nick, channel, 'Usage: !register USERNAME PASSWORD')
         if channel != None:
-            self.__mock(channel)
-            return
+            return self.error_message(nick, channel, 'USE PRIVATE MESSAGES FOR REGISTERING AND LOGGING IN (idiot)')
         
         m = Message()
         m.command = 'PRIVMSG'
@@ -74,10 +73,12 @@ class Core(plugin.Plugin):
         
     def login(self, nick, channel, details):
         if len(details) < 2:
-            return;
+            return self.error_message(nick, channel, 'Usage: !login USERNAME PASSWORD')
         if channel != None:
-            self.__mock(channel)
-            return
+            return self.error_message(nick, channel, 'USE PRIVATE MESSAGES FOR REGISTERING AND LOGGING IN (idiot)')
+        u = user.User(nick=nick)
+        if not u.new:
+            return self.error_message(nick, channel, 'You are already logged in as ' + u.nick)            
 
         m = Message()
         m.command = 'PRIVMSG'
@@ -107,8 +108,11 @@ class Core(plugin.Plugin):
         
     def perms(self, nick, channel, details):
         if len(details) == 0:
-            return
+            return self.error_message(nick, channel, 'Usage: !perms USER [CHANNEL] [PERMISSIONS]')
         u = user.User(details[0])
+        if u.new:
+            return self.error_message(nick, channel, 'Could not find user')
+
         m = Message()
         m.command = 'PRIVMSG'
         if len(details) == 1:
@@ -116,11 +120,16 @@ class Core(plugin.Plugin):
         elif len(details) == 2:
             m.params = [nick, str(u.getpermissions(details[1]))]
         elif len(details) == 3:
-            u.setpermissions(details[1], details[2])
-            m.params = [nick, 'Done']
+            if self.check_permissions(nick, details[1], 'o'):
+                u.setpermissions(details[1], details[2])
+                m.params = [nick, 'Done']
+            else:
+                return self.error_message(nick, channel, 'You do not have the required permissions for this channel')
         self.connection.send(m)
             
     def promote(self, nick, channel, details):
+        if channel == None and len(details) == 0:
+            return self.error_message(nick, channel, 'Usage: !promote CHANNEL')
         u = user.User(nick=nick)
         m = Message()
         if u.new:
@@ -130,9 +139,7 @@ class Core(plugin.Plugin):
         else:
             if channel == None:
                 channel = details[0] if details[0].startswith('#') else '#' + details[0]
-            print(u.username + ' ' + u.nick)
             perms = u.getpermissions(channel)
-            print(perms)
             if perms != None:
                 m.command = 'MODE'
                 m.params = [channel, '+' + perms, nick]
@@ -152,9 +159,3 @@ class Core(plugin.Plugin):
         for row in users:
             m.params[1] = str(row)
             self.connection.send(m)
-            
-    def __mock(self, replyto):
-        m = Message()
-        m.command = 'PRIVMSG'
-        m.params = [replyto, 'You are an idiot']
-        self.connection.send(m)
