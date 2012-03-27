@@ -1,12 +1,21 @@
 import sys
+import sqlite3
 import connection
 from message import Message
 import core
 import plugin
 import user
 
+def create_connection():
+    return sqlite3.connect('beastbot.db')
+    
+def close_connection(connection):
+    connection.close()
+
 class BeastBot:
     def __init__(self, server, port=6667, nick='BeastBot', username=None, password=None):
+        user.setup_connection_factory(create_connection, close_connection)
+        
         self.connection = connection.Connection(server, port)
         self.connection.handshake(nick)
         self.plugins = [core.Core(self.connection)]

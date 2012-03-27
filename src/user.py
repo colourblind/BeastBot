@@ -1,5 +1,12 @@
-import sqlite3
 import os
+
+get_connection = None
+done_connection = None
+
+def setup_connection_factory(g, d):
+    global get_connection, done_connection
+    get_connection = g
+    done_connection = d
 
 class User:
     def __init__(self, username=None, nick=None, data=None):
@@ -12,17 +19,17 @@ class User:
             self.__password = ''
         else:
             if not username == None:
-                conn = sqlite3.connect('beastbot.db')
+                conn = get_connection()
                 c = conn.cursor()
                 c.execute('select username, password, nick, admin, last_login from user where username = ?', (username,))
                 data = c.fetchone()
-                conn.close()
+                done_connection(conn)
             elif not nick == None:
-                conn = sqlite3.connect('beastbot.db')
+                conn = get_connection()
                 c = conn.cursor()
                 c.execute('select username, password, nick, admin, last_login from user where nick = ?', (nick,))
                 data = c.fetchone()
-                conn.close()
+                done_connection(conn)
                 
             if data == None:
                 self.new = True
@@ -44,7 +51,7 @@ class User:
         return s
        
     def save(self):
-        conn = sqlite3.connect('beastbot.db')
+        conn = get_connection()
         c = conn.cursor()
         if self.new:
             data = (self.username, self.__password, self.nick, self.admin, self.last_login)
@@ -54,29 +61,29 @@ class User:
             data = (self.__password, self.nick, self.admin, self.last_login, self.username)
             c.execute('update user set password = ?, nick = ?, admin = ?, last_login = ? where username = ?', data)
         conn.commit()
-        conn.close()
+        done_connection(conn)
 
     def getallpermissions(self):
-        conn = sqlite3.connect('beastbot.db')
+        conn = get_connection()
         c = conn.cursor()
         c.execute('select rights, channel from permission where username = ?', (self.username,))
         data = c.fetchall()
-        conn.close()
+        done_connection(conn)
         return data
         
     def getpermissions(self, channel):
-        conn = sqlite3.connect('beastbot.db')
+        conn = get_connection()
         c = conn.cursor()
         c.execute('select rights from permission where username = ? and channel = ?', (self.username, channel))
         data = c.fetchone()
-        if data == None:
-            return None
-        else:
-            conn.close()
-            return data[0]
+        result = None
+        if data != None:
+            result = data[0]
+        done_connection(conn)
+        return result
         
     def setpermissions(self, channel, rights):
-        conn = sqlite3.connect('beastbot.db')
+        conn = get_connection()
         c = conn.cursor()
         if rights == '0':
             c.execute('delete from permission where username = ? and channel = ?', (self.username, channel))
@@ -89,7 +96,7 @@ class User:
             else:
                 c.execute('update permission set rights = ? where username = ? and channel = ?', (rights, self.username, channel))
         conn.commit()
-        conn.close()
+        done_connection(conn)
         
     def checkpassword(self, password):
         return self.__password == hash(password)
@@ -116,25 +123,25 @@ def hash(password):
     return password
         
 def finduser(username):
-    conn = sqlite3.connect('beastbot.db')
+    conn = get_connection()
     c = conn.cursor()
     c.execute("select username, password, nick, admin, last_login from user where username like ?", ('%' + username + '%',))
     data = c.fetchall()
-    conn.close()
+    done_connection(conn)
     return map(lambda x: User(data=x), data)
 
 def reset_all_logins():
-    conn = sqlite3.connect('beastbot.db')
+    conn = get_connection()
     c = conn.cursor()
     c.execute("update user set nick = ''")
     conn.commit()
-    conn.close()
+    done_connection(conn)
     
 def setup_db():
     if os.path.exists('beastbot.db') and os.path.isfile('beastbot.db'):
         return
         
-    conn = sqlite3.connect('beastbot.db')
+    conn = get_connection()
     c = conn.cursor()
 
     c.execute('create table user (username text primary key, password text, nick text, admin integer, last_login text)')
@@ -143,12 +150,12 @@ def setup_db():
     c.execute('create table permission (username text, channel text, rights text, primary key(username, channel))')
     
     conn.commit()
-    conn.close()
+    done_connection(conn)
 
 def is_new_channel(channel):
-    conn = sqlite3.connect('beastbot.db')
+    conn = get_connection()
     c = conn.cursor()
     c.execute('select * from permission where channle = ?', (channel,))
     data = c.rowcount == 0
-    conn.close()
+    done_connection(conn)
     return data
