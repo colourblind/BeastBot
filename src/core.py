@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from message import Message
-import user
+import db
 import plugin
 
 class Core(plugin.Plugin):
@@ -8,8 +8,8 @@ class Core(plugin.Plugin):
         plugin.Plugin.__init__(self, connection)
         self.startdate = datetime.now()
         self.pluginname = ''
-        user.setup_db()
-        user.reset_all_logins()
+        db.setup_db()
+        db.reset_all_logins()
     
     def uptime(self, nick, channel, details):
         replyto = nick if channel == None else channel
@@ -61,7 +61,7 @@ class Core(plugin.Plugin):
         
         m = Message()
         m.command = 'PRIVMSG'
-        u = user.User(details[0])
+        u = db.User(details[0])
         if u.new:
             u.username = details[0]
             u.setpassword(details[1])
@@ -76,13 +76,13 @@ class Core(plugin.Plugin):
             return self.error_message(nick, channel, 'Usage: !login USERNAME PASSWORD')
         if channel != None:
             return self.error_message(nick, channel, 'USE PRIVATE MESSAGES FOR REGISTERING AND LOGGING IN (idiot)')
-        u = user.User(nick=nick)
+        u = db.User(nick=nick)
         if not u.new:
             return self.error_message(nick, channel, 'You are already logged in as ' + u.nick)            
 
         m = Message()
         m.command = 'PRIVMSG'
-        u = user.authenticate(details[0], details[1])
+        u = db.authenticate(details[0], details[1])
         if u == None:
             m.params = [nick, 'Login failed']
         else:
@@ -96,7 +96,7 @@ class Core(plugin.Plugin):
         self.connection.send(m)
         
     def logout(self, nick, channel, details):
-        u = user.User(nick=nick)
+        u = db.User(nick=nick)
         m = Message()
         m.command = 'PRIVMSG'
         if u.new:
@@ -109,7 +109,7 @@ class Core(plugin.Plugin):
     def perms(self, nick, channel, details):
         if len(details) == 0:
             return self.error_message(nick, channel, 'Usage: !perms USER [CHANNEL] [PERMISSIONS]')
-        u = user.User(details[0])
+        u = db.User(details[0])
         if u.new:
             return self.error_message(nick, channel, 'Could not find user')
 
@@ -131,7 +131,7 @@ class Core(plugin.Plugin):
     def promote(self, nick, channel, details):
         if channel == None and len(details) == 0:
             return self.error_message(nick, channel, 'Usage: !promote CHANNEL')
-        u = user.User(nick=nick)
+        u = db.User(nick=nick)
         m = Message()
         if u.new:
             m.command = 'PRIVMSG'
@@ -153,7 +153,7 @@ class Core(plugin.Plugin):
     def finduser(self, nick, channel, details):
         if len(details) < 1:
             return;
-        users = user.finduser(details[0])
+        users = db.finduser(details[0])
         m = Message()
         m.command = 'PRIVMSG'
         m.params = [nick, '']

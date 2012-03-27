@@ -4,7 +4,7 @@ import connection
 from message import Message
 import core
 import plugin
-import user
+import db
 
 def create_connection():
     return sqlite3.connect('beastbot.db')
@@ -14,7 +14,7 @@ def close_connection(connection):
 
 class BeastBot:
     def __init__(self, server, port=6667, nick='BeastBot', username=None, password=None):
-        user.setup_connection_factory(create_connection, close_connection)
+        db.setup_connection_factory(create_connection, close_connection)
         
         self.connection = connection.Connection(server, port)
         self.connection.handshake(nick)
@@ -35,11 +35,11 @@ class BeastBot:
             self.connection.send(m)
         elif message.command == 'QUIT':
             # user left. Log them out if need be
-            u = user.User(nick=message.sender)
+            u = db.User(nick=message.sender)
             u.logout()
         elif message.command == 'NICK':
             # nick updated. Chase them!
-            u = user.User(nick=message.sender)
+            u = db.User(nick=message.sender)
             u.change_nick(message.params[0])
         elif message.command == 'PRIVMSG' and message.params[1].startswith('!'):
             # palm it off to the plugins

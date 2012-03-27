@@ -1,7 +1,7 @@
 import imp
 import inspect
 import os
-import user
+import db
 from message import Message
 
 class Plugin:
@@ -37,7 +37,7 @@ class Plugin:
         return True
 
     def check_permissions(self, nick, channel, required):
-        u = user.User(nick=nick)
+        u = db.User(nick=nick)
         if u == None:
             return False
         if u.admin:
