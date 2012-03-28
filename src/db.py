@@ -90,7 +90,7 @@ class User:
         else:
             c.execute('select * from permission where username = ? and channel = ?', (self.username, channel))
             d = c.fetchall()
-            print(len(d))
+            #print(len(d))
             if len(d) == 0:
                 c.execute('insert into permission (rights, username, channel) values (?, ?, ?)', (rights, self.username, channel))
             else:

@@ -1,3 +1,3 @@
 @echo off
 set PYTHONPATH=%cd%\src
-python -m unittest discover -s test
+python -m unittest discover -v -s test

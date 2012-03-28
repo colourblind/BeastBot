@@ -13,11 +13,11 @@ def setup():
 
 class TestConnection():
     def __init__(self):
-        print('** Opening test database')
+        #print('** Opening test database')
         self._connection = sqlite3.connect(':memory:')
         
     def __del__(self):
-        print('** Closing test database')
+        #print('** Closing test database')
         self._connection.close()
         
     def get_connection(self):
