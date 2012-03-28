@@ -25,10 +25,10 @@ class Message:
                 endIndex = len(self.prefix)
             self.sender = self.prefix[self.prefix.index(':') + 1:endIndex]
                 
-        print('prefix-' + self.prefix)
-        print('sender-' + self.sender);
-        print('comman-' + self.command)
-        print('params-' + str(self.params))
+#        print('prefix-' + self.prefix)
+#        print('sender-' + self.sender);
+#        print('comman-' + self.command)
+#        print('params-' + str(self.params))
         
     def serialise(self):
         p = ' '.join(map(lambda x: ':' + x if ' ' in x else x, self.params))
