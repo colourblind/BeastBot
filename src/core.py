@@ -42,6 +42,17 @@ class Core(plugin.Plugin):
         # TODO: check if channel already in system
         # TODO: setup user as operator if not
         
+    def leave(self, nick, channel, details):
+        if channel == None and len(details) == 0:
+            return self.error_message(nick, channel, 'Usage: !leave CHANNEL')
+        m = Message()
+        m.command = 'PART'
+        if len(details) > 0:
+            m.params = [details[0]]
+        elif channel != None:
+            m.params = [channel]
+        self.connection.send(m)
+        
     def die(self, nick, channel, details):
         if not self.check_permissions(nick, channel, 'a'):
             return self.error_message(nick, channel, 'Admin rights required')
