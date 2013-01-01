@@ -49,5 +49,6 @@ class BeastBot:
             
 
 if __name__ == '__main__':
-    beastbot = BeastBot(sys.argv[1])
+    port = 6667 if len(sys.argv) < 3 else int(sys.argv[2])
+    beastbot = BeastBot(sys.argv[1], port)
     beastbot.run()
