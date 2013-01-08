@@ -1,6 +1,7 @@
 import socket
 import message
 import sys
+import time
 
 class Connection:
     def __init__(self, address, port=6667):
@@ -13,6 +14,7 @@ class Connection:
         self.s.close()
         
     def handshake(self, nick, username=None, password=None):
+        time.sleep(3)
         m = message.Message()
         m.command = 'NICK'
         m.params = [nick]
