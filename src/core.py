@@ -131,9 +131,9 @@ class Core(plugin.Plugin):
         elif len(details) == 2:
             m.params = [nick, str(u.getpermissions(details[1]))]
         elif len(details) == 3:
-            channel = details[1] if details[1].startswith('#') else '#' + details[1]
-            if self.check_permissions(nick, channel, 'o'):
-                u.setpermissions(channel, details[2])
+            target_channel = details[1] if details[1].startswith('#') else '#' + details[1]
+            if self.check_permissions(nick, target_channel, 'o'):
+                u.setpermissions(target_channel, details[2])
                 m.params = [nick, 'Done']
             else:
                 return self.error_message(nick, channel, 'You do not have the required permissions for this channel')
