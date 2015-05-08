@@ -1,5 +1,6 @@
 import urllib
-from xml.etree.ElementTree import ElementTree
+import re
+from xml.etree import ElementTree
 import plugin
 from message import Message
 
@@ -10,17 +11,20 @@ class Lookup(plugin.Plugin):
 
     # http://blog.programmableweb.com/2010/02/08/googles-secret-weather-api/
     def weather(self, nick, channel, params):
+        # ditch this for now. The API appears to have gone away
+        return
+    
         if len(params) < 1:
             return;
 
         replyto = nick if channel == None else channel
         location = ' '.join(params)
         url = 'http://www.google.com/ig/api?' + urllib.urlencode({'weather' : location})
-        xml = ElementTree(file=urllib.urlopen(url))
+        xml = ElementTree.parse(urllib.urlopen(url))
         
-        condition = xml.find('//current_conditions/condition').attrib['data']
-        temp = (xml.find('//current_conditions/temp_c').attrib['data'], xml.find('//temp_f').attrib['data'])
-        wind = xml.find('//current_conditions/wind_condition').attrib['data']
+        condition = xml.find('.//current_conditions/condition').attrib['data']
+        temp = (xml.find('.//current_conditions/temp_c').attrib['data'], xml.find('//temp_f').attrib['data'])
+        wind = xml.find('.//current_conditions/wind_condition').attrib['data']
         report = '{0} is currently {1} ({2}C {3}F) {4}'.format(location, condition, temp[0], temp[1], wind)
         
         m = Message()
@@ -38,10 +42,10 @@ class Lookup(plugin.Plugin):
         replyto = nick if channel == None else channel
         url = 'http://services.aonaware.com/DictService/DictService.asmx/DefineInDict'
         body = urllib.urlencode({'dictId' : 'wn', 'word' : params[0]}) 
-        xml = ElementTree(file=urllib.urlopen(url, body))
-        
+        xml = ElementTree.parse(urllib.urlopen(url, body))
+       
         namespace = '{http://services.aonaware.com/webservices/}'
-        result = xml.findtext('//{0}Definition/{0}WordDefinition'.format(namespace))
+        result = xml.findtext('.//{0}Definition/{0}WordDefinition'.format(namespace))
     
         m = Message()
         m.command = 'PRIVMSG'
@@ -57,18 +61,63 @@ class Lookup(plugin.Plugin):
             return;
 
         replyto = nick if channel == None else channel
-        url = 'http://en.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&format=xml&titles=' + urllib.encode(params[0])
-        xml = ElementTree(file=urllib.open(url))
-    
-        result = xml.findtext('rev')
-        result = self.__deugly_wikimedia(result)
-    
+        qs = { 
+            'action': 'query',
+            'prop': 'revisions',
+            'rvprop': 'content',
+            'format': 'xml',
+            'titles': ' '.join(params)
+        }
+        url = 'http://en.wikipedia.org/w/api.php?' + urllib.urlencode(qs)
+
+        xml = ElementTree.parse(urllib.urlopen(url))
+        result = xml.findtext('.//rev')
+
+        if result is not None:
+            result = self.deugly_wikimedia(result)
+        else:
+            result = 'Couldn\'t find it :('
+            
         m = Message()
         m.command = 'PRIVMSG'
         m.params = [replyto, result]
         self.connection.send(m)
 
     # Helper method to remove the WikiMedia markup from a string
-    def __deugly_wikimedia(data):
+    def deugly_wikimedia(self, data):
+        stack = []
+        offset = 0
+        # remove metadata sections
+        while '{{' in data:
+            start = data.find('{{', offset)
+            end = data.find('}}', offset)
+            if start == -1 or end < start:
+                if len(stack) == 0:
+                    break # fuck it
+                a = stack.pop()
+                d = data[:a] + data[end + 2:]
+                data = d
+                offset = a + 2
+            else:
+                stack.append(start)
+                offset = start + 2
+        
+        # remove blank lines
+        data = data.replace('\r\n', '')
+        data = data.replace('\n', '')
+        
+        # scrap text formatting
+        data = data.replace("''", '')
+        data = data.replace("'''", '')
+        data = data.replace("''''", '')
+        data = data.replace("'''''", '')
+        
+        # tidy links
+        data = re.sub(r'\[\[([^\]\|]+)\|([^\]\|]+)\]\]', r'\2', data)
+        data = re.sub(r'\[\[([^\]\|]+)\]\]', r'\1', data)
+        
+        # split paragraphs
+        data = data.splitlines()[0]
         
         return data
+
