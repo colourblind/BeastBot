@@ -3,6 +3,10 @@ import message
 import sys
 import time
 
+# TODO
+# handle server passwords
+# SSL connections
+
 class Connection:
     def __init__(self, address, port=6667):
         self.s = socket.socket()
@@ -20,8 +24,9 @@ class Connection:
         m.params = [nick]
         self.send(m)
         m.command = 'USER'
-        m.params = ['BeastBot', 'localhost', 'servername', 'BeastBot']
+        m.params = [nick if username is None else username, '8', '*', '.']
         self.send(m)
+        # TODO: pass?
     
     def join(self, channel):
         m = message.Message()
