@@ -137,7 +137,7 @@ def reset_all_logins():
     conn.commit()
     done_connection(conn)
     
-def setup_db():
+def setup_db(admin_username, admin_password):
     if os.path.exists('beastbot.db') and os.path.isfile('beastbot.db'):
         return
         
@@ -145,7 +145,7 @@ def setup_db():
     c = conn.cursor()
 
     c.execute('create table user (username text primary key, password text, nick text, admin integer, last_login text)')
-    c.execute('insert into user values (?, ?, ?, ?, ?)', ('admin', 'password', '', True, None))
+    c.execute('insert into user values (?, ?, ?, ?, ?)', (admin_username, admin_password, '', True, None))
     
     c.execute('create table permission (username text, channel text, rights text, primary key(username, channel))')
     

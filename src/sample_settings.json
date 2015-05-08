@@ -1,0 +1,8 @@
+{
+    "host": "irc.server.com",
+    "port": 6667,
+    "nick": "BeastBot",
+    "command_prefix": "!",
+    "admin_username": "admin",
+    "admin_password": "password"
+}

@@ -4,11 +4,11 @@ import db
 import plugin
 
 class Core(plugin.Plugin):
-    def __init__(self, connection):
+    def __init__(self, connection, settings):
         plugin.Plugin.__init__(self, connection)
         self.startdate = datetime.now()
         self.pluginname = ''
-        db.setup_db()
+        db.setup_db(settings['admin_username'], settings['admin_password'])
         db.reset_all_logins()
     
     def uptime(self, nick, channel, details):
@@ -43,6 +43,7 @@ class Core(plugin.Plugin):
         # TODO: setup user as operator if not
         
     def leave(self, nick, channel, details):
+        # TODO: check chanop status
         if channel == None and len(details) == 0:
             return self.error_message(nick, channel, 'Usage: !leave CHANNEL')
         m = Message()

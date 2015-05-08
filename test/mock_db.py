@@ -9,7 +9,7 @@ def setup():
         return
     memory_db = TestConnection()
     db.setup_connection_factory(memory_db.get_connection, memory_db.done_connection)
-    db.setup_db()
+    db.setup_db('admin', 'password')
 
 class TestConnection():
     def __init__(self):
