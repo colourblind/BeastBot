@@ -12,6 +12,7 @@ class Connection:
         self.s = socket.socket()
         self.buffer = ''
         print('Connecting to ' + address)
+        self.s.settimeout(60)
         self.s.connect((address, port))
     
     def __del__(self):
@@ -39,8 +40,12 @@ class Connection:
         
     def send(self, message):
         data = message.serialise()
-        print(data)
-        self.s.sendall(data)
+        data = data[:508] # technically 512, but if I cut it fine some servers just ignore it
+        try:
+            print(data)
+            self.s.sendall(data)
+        except UnicodeEncodeError:
+            print('UnicodeEncodeError - you should probably fix that')
         # TODO: unhack
         if message.command == 'QUIT':
             sys.exit(0)
@@ -61,5 +66,12 @@ class Connection:
         return m
         
     def __receive(self):
-        data = self.s.recv(4096)
-        self.buffer = self.buffer + data
+        data = None
+        while data is None:
+            try:
+                data = self.s.recv(4096)
+                self.buffer = self.buffer + data
+            except socket.timeout:
+                # Just keep waiting. Only using a timeout
+                # so we can handle interrupts
+                pass
