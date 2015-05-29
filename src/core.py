@@ -172,3 +172,19 @@ class Core(plugin.Plugin):
         for row in users:
             m.params[1] = str(row)
             self.connection.send(m)
+            
+    def seen(self, nick, channel, params):
+        # TODO: case sensitivity?
+        if len(params) == 0:
+            return self.error_message(nick, channel, 'Usage: !seen NICK')
+    
+        result = db.last_seen(params[0])
+        
+        m = Message()
+        m.command = 'PRIVMSG'
+        m.params = [nick if channel == None else channel]
+        if result is None:
+            m.params.append('Never seen {0}'.format(params[0]))
+        else:
+            m.params.append('{0} was last seen at {1}'.format(params[0], result))
+        self.connection.send(m)

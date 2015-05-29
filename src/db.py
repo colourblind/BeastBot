@@ -1,4 +1,7 @@
 import os
+from datetime import datetime
+
+# TODO: decorator to set up and tear down connections?
 
 get_connection = None
 done_connection = None
@@ -148,6 +151,7 @@ def setup_db(admin_username, admin_password):
     c.execute('insert into user values (?, ?, ?, ?, ?)', (admin_username, admin_password, '', True, None))
     
     c.execute('create table permission (username text, channel text, rights text, primary key(username, channel))')
+    c.execute('create table message_log (date text, command text, nick text, channel text, message text)')
     
     conn.commit()
     done_connection(conn)
@@ -159,3 +163,25 @@ def is_new_channel(channel):
     data = c.rowcount == 0
     done_connection(conn)
     return data
+    
+def log_message(command, nick, channel, message):
+    conn = get_connection()
+    c = conn.cursor()
+    
+    channel = channel.lower() if isinstance(channel, basestring) else channel
+    data = (datetime.now(), command, nick.lower(), channel, message)
+    c.execute('insert into message_log (date, command, nick, channel, message) values (?, ?, ?, ?, ?)', data)
+    
+    conn.commit()
+    done_connection(conn)
+    
+def last_seen(nick):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute('select date from message_log where nick = ? order by date desc limit 1', (nick.lower(),))
+    data = c.fetchone()
+    done_connection(conn)
+    if data is not None:
+        data = data[0][:data[0].index('.')]
+    return data
+    

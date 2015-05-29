@@ -49,7 +49,11 @@ class BeastBot:
             for plugin in self.plugins:
                 if plugin.handle(message):
                     break
-            
+             
+        channel = None
+        if message.params[0].startswith('#'):
+            channel = message.params[0]
+        db.log_message(message.command, message.sender, channel, ' '.join(message.params))
 
 if __name__ == '__main__':
     settings_file = open(sys.argv[1], 'r')
